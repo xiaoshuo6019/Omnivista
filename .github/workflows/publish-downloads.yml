@@ -1,18 +1,14 @@
-name: Publish verified installation downloads
+name: Stage verified replacement NAS download
 
 on:
   workflow_dispatch:
     inputs:
       artifact_url:
-        description: Short-lived URL of the verified installation archive
+        description: Short-lived URL containing only the installable Docker artifact
         required: true
         type: string
       artifact_digest:
-        description: SHA256 of the verified build artifact
-        required: false
-        type: string
-      launcher_digest:
-        description: SHA256 of the companion launcher ZIP
+        description: SHA256 of the verified private build artifact
         required: true
         type: string
 
@@ -24,14 +20,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish-downloads:
+  stage-download:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
-      RELEASE_TAG: v02.06.4beta
       IMAGE_FILE: omnivista-v02.06.4beta-linux-amd64.tar
-      LAUNCHER_FILE: OmnivistaCompute-0.1.4-v02.06.4beta.zip
     steps:
       - name: Download and verify installation archive
         env:
@@ -40,33 +34,33 @@ jobs:
         run: |
           printf '::add-mask::%s\n' "$ARTIFACT_URL"
           python - <<'PY'
-          import hashlib, os, pathlib, shutil, urllib.parse, urllib.request, zipfile
-          url = os.environ['ARTIFACT_URL']
-          parsed = urllib.parse.urlsplit(url)
+          import hashlib, json, os, pathlib, shutil, tarfile, urllib.parse, urllib.request, zipfile
+          parsed = urllib.parse.urlsplit(os.environ['ARTIFACT_URL'])
           assert parsed.scheme == 'https' and parsed.hostname.endswith('.blob.core.windows.net')
           archive = pathlib.Path('verified-installation.zip')
-          with urllib.request.urlopen(url, timeout=60) as source, archive.open('wb') as destination:
-              shutil.copyfileobj(source, destination)
-          expected = os.environ['ARTIFACT_DIGEST']
-          if expected:
-              with archive.open('rb') as stream:
-                  assert 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest() == expected
+          with urllib.request.urlopen(os.environ['ARTIFACT_URL'], timeout=90) as source, archive.open('wb') as target:
+              shutil.copyfileobj(source, target)
+          with archive.open('rb') as stream:
+              assert 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest() == os.environ['ARTIFACT_DIGEST']
+          image_name = os.environ['IMAGE_FILE']
           with zipfile.ZipFile(archive) as bundle:
-              assert sorted(bundle.namelist()) == sorted([os.environ['IMAGE_FILE'], 'SHA256SUMS-docker'])
+              assert set(bundle.namelist()) == {image_name, 'SHA256SUMS-docker'}
               assert bundle.testzip() is None
               for name in bundle.namelist():
                   bundle.extract(name, 'downloads')
+          image_path = pathlib.Path('downloads', image_name)
+          expected = pathlib.Path('downloads/SHA256SUMS-docker').read_text().split()[0]
+          with image_path.open('rb') as stream:
+              assert hashlib.file_digest(stream, 'sha256').hexdigest() == expected
+          with tarfile.open(image_path) as image:
+              manifest = json.load(image.extractfile('manifest.json'))
+              assert len(manifest) == 1
+              assert 'ghcr.io/xiaoshuo6019/omnivista:v02.06.4beta' in manifest[0]['RepoTags']
+              config = json.load(image.extractfile(manifest[0]['Config']))
+              assert config['os'] == 'linux' and config['architecture'] == 'amd64'
+          print('VERIFIED_TAR_SHA256=' + expected)
+          image_path.rename(str(image_path) + '.incoming-2661656')
           PY
-          cd downloads
-          sha256sum --check SHA256SUMS-docker
-      - name: Download companion launcher from draft release
-        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern "$LAUNCHER_FILE" --dir downloads
-      - name: Verify and publish complete release
-        env:
-          LAUNCHER_DIGEST: ${{ inputs.launcher_digest }}
+      - name: Stage replacement without removing existing downloads
         run: |
-          cd downloads
-          printf '%s  %s\n' "$LAUNCHER_DIGEST" "$LAUNCHER_FILE" | sha256sum --check -
-          sha256sum "$IMAGE_FILE" "$LAUNCHER_FILE" > SHA256SUMS
-          gh release upload "$RELEASE_TAG" "$IMAGE_FILE" SHA256SUMS --repo "$GITHUB_REPOSITORY"
-          gh release edit "$RELEASE_TAG" --draft=false --repo "$GITHUB_REPOSITORY"
+          gh release upload v02.06.4beta "downloads/${IMAGE_FILE}.incoming-2661656" --repo "$GITHUB_REPOSITORY"
