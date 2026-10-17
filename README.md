@@ -14,7 +14,7 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 多算力是多台电脑分别处理分配到的任务，不是将多张显卡合并执行同一次推理。AI 视频、AI 音频以及界面中标注“待接入”的功能仍在开发，不能视为已经可用。
 
-本仓库仅提供安装包、版本说明与使用指引，不包含项目源码。Windows 启动器不包含模型、ComfyUI 或 GPU 运行环境，需要使用者自行准备。
+本仓库仅提供安装包、版本说明与使用指引，不包含项目源码。Windows 完整算力端包含启动器、Python、PyTorch/CUDA 运行库、ComfyUI、必要插件和工作流；模型与 Windows GPU 驱动需自行准备。
 
 ## 界面展示
 
@@ -41,10 +41,10 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 进入右侧 **Releases**，选择 **v02.06.4beta**，展开 **Assets**：
 
 - `omnivista-v02.06.4beta-linux-amd64.tar`：NAS Docker 镜像，适用于 x86-64 NAS。
-- `OmnivistaCompute-0.1.4-v02.06.4beta.zip`：Windows 本地算力启动器。
+- `OmnivistaCompute-Full-0.1.4-v02.06.4beta.7z.001`～`.004`：Windows 完整算力端，共 4 卷、约 6.34 GiB；须全部下载。解压后运行环境约 15.6 GiB，另备模型空间。
 - `SHA256SUMS`：安装包 SHA256 校验值。
 
-启动器独立版本仍为 **0.1.4**，窗口同时标明兼容 **v02.06.4beta**；请使用这一版配套 ZIP，不要混用旧包。
+启动器独立版本仍为 **0.1.4**，窗口同时标明兼容 **v02.06.4beta**。本次为同版本覆盖更新，完整分卷包替代旧的仅启动器 ZIP；请重新下载，不要混用旧附件。
 
 ## NAS 安装与升级
 
@@ -57,13 +57,30 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ## Windows 启动器
 
-1. 解压启动器 ZIP。升级时先从窗口或托盘完全退出旧启动器，再备份并替换 EXE；保留原运行环境、模型和 private 配置目录。
-2. 首次填写 NAS 地址，点击“连接 NAS”，由 NAS Web 管理员确认接入；以后自动读取配置并重连。
-3. Windows 登录后自动运行的是启动器，不会自动启动算力。算力由 NAS Web 控制，本机保留待机和关机。
-4. 右侧白底正方形按钮上方为图标、下方为“登录”，用于打开 NAS 网页。
-5. 连接后按 NAS 请求只读上报硬件与实际模型清单；不自动下载或加载模型。
+1. 下载全部同名 `.7z.001`、`.7z.002` 等分卷到同一目录，用 7-Zip 打开 `.001` 完整解压到可写目录。不要逐卷解压，也不要只取出 EXE。尽量使用较短路径，如 `D:\OmnivistaCompute`；运行库包含长路径文件。
+2. 保持 `Omnivista` 与 `Omnivista_models` 两个文件夹同级。双击 `Omnivista/Omnivista Compute Launcher.exe`；运行环境选 `Omnivista`，模型选同级 `Omnivista_models` 或自己的已有模型目录。模型按启动器“模型存放说明”放入 `unet`、`text_encoders`、`vae`、`loras`。
+3. 升级前先完全退出旧启动器并备份配置。保留自己的模型与 `private`，不要用新包的空目录覆盖；新电脑不要复制别人的 NAS 连接身份。Windows GPU 驱动仍需自行安装。
+4. 首次填写 NAS 地址，点击“连接 NAS”，由 NAS Web 管理员确认接入；以后自动读取配置并重连。
+5. Windows 登录后自动运行的是启动器，不会自动启动算力。算力由 NAS Web 控制，本机保留待机和关机。
+6. 右侧白底正方形按钮上方为图标、下方为“登录”，用于打开 NAS 网页。
+7. 连接后按 NAS 请求只读上报硬件与实际模型清单；不自动下载或加载模型。
 
 不要分享自己的 private、cache、logs 目录，只分享原始下载包。
+
+### 基础生图模型表
+
+程序和模型保持分开，启动器的模型目录选择 `Omnivista_models` 根目录，不要选择某一个文件或 `unet` 子目录。完整运行环境包内附有“模型清单与路径.md”，权重需要自行准备。
+
+| 文件 | 约大小 | 模型目录下的位置 | 用途 |
+|---|---:|---|---|
+| `qwen-image-2.1-UC-Q4_0.gguf` | 3.87 GiB | `unet/` | 主模型 |
+| `qwen3vl_8b_w4a8_heretic.safetensors` | 5.88 GiB | `text_encoders/` | 编码器 |
+| `qwen_image_2.1_vae_bf16.safetensors` | 0.63 GiB | `vae/` | VAE |
+| `Qwen-Image-2.1-viggle-turbo-4step-lora-r64.safetensors` | 0.32 GiB | `loras/` | 文生图 LoRA |
+| `elusarcas-qwen2-1-detailer-v1.safetensors` | 0.07 GiB | `loras/` | 文生图细节 LoRA |
+| `Qwen-Image-2.1-viggle-turbo-v0.2.1-6step-lora-r128.safetensors` | 0.63 GiB | `loras/` | 图片编辑 LoRA |
+
+当前这组共约 11.40 GiB，只对应已接通的基础文生图和图片编辑，不是 v01 全部功能资源。已有模型可继续放在其他磁盘，启动器选择其共同根目录即可；无需修改 NAS 或 ComfyUI 服务地址。
 
 ## 版本范围
 
