@@ -1,0 +1,72 @@
+name: Publish verified installation downloads
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_url:
+        description: Short-lived URL of the verified installation archive
+        required: true
+        type: string
+      artifact_digest:
+        description: SHA256 of the verified build artifact
+        required: false
+        type: string
+      launcher_digest:
+        description: SHA256 of the companion launcher ZIP
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-v02.06.4beta-downloads
+  cancel-in-progress: false
+
+jobs:
+  publish-downloads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v02.06.4beta
+      IMAGE_FILE: omnivista-v02.06.4beta-linux-amd64.tar
+      LAUNCHER_FILE: OmnivistaCompute-0.1.4-v02.06.4beta.zip
+    steps:
+      - name: Download and verify installation archive
+        env:
+          ARTIFACT_URL: ${{ inputs.artifact_url }}
+          ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+        run: |
+          printf '::add-mask::%s\n' "$ARTIFACT_URL"
+          python - <<'PY'
+          import hashlib, os, pathlib, shutil, urllib.parse, urllib.request, zipfile
+          url = os.environ['ARTIFACT_URL']
+          parsed = urllib.parse.urlsplit(url)
+          assert parsed.scheme == 'https' and parsed.hostname.endswith('.blob.core.windows.net')
+          archive = pathlib.Path('verified-installation.zip')
+          with urllib.request.urlopen(url, timeout=60) as source, archive.open('wb') as destination:
+              shutil.copyfileobj(source, destination)
+          expected = os.environ['ARTIFACT_DIGEST']
+          if expected:
+              with archive.open('rb') as stream:
+                  assert 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest() == expected
+          with zipfile.ZipFile(archive) as bundle:
+              assert sorted(bundle.namelist()) == sorted([os.environ['IMAGE_FILE'], 'SHA256SUMS-docker'])
+              assert bundle.testzip() is None
+              for name in bundle.namelist():
+                  bundle.extract(name, 'downloads')
+          PY
+          cd downloads
+          sha256sum --check SHA256SUMS-docker
+      - name: Download companion launcher from draft release
+        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern "$LAUNCHER_FILE" --dir downloads
+      - name: Verify and publish complete release
+        env:
+          LAUNCHER_DIGEST: ${{ inputs.launcher_digest }}
+        run: |
+          cd downloads
+          printf '%s  %s\n' "$LAUNCHER_DIGEST" "$LAUNCHER_FILE" | sha256sum --check -
+          sha256sum "$IMAGE_FILE" "$LAUNCHER_FILE" > SHA256SUMS
+          gh release upload "$RELEASE_TAG" "$IMAGE_FILE" SHA256SUMS --repo "$GITHUB_REPOSITORY"
+          gh release edit "$RELEASE_TAG" --draft=false --repo "$GITHUB_REPOSITORY"
