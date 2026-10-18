@@ -57,7 +57,7 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 进入右侧 **Releases**，选择 **v02.06.4beta**，展开 **Assets**：
 
 - `omnivista-v02.06.4beta-linux-amd64.tar`：NAS Docker 镜像，适用于 x86-64 NAS。
-- `OmnivistaCompute-Full-0.1.4-v02.06.4beta.7z.001`～`.004`：Windows 完整算力端，共 4 卷、约 6.34 GiB；须全部下载。解压后运行环境约 15.6 GiB，另备模型空间。
+- `Omnivista-base-0.1.4.7z.001`～`.004`：Windows 完整算力端，共 4 卷、约 6.34 GiB；须全部下载。解压后运行环境约 15.6 GiB，另备模型空间。
 - `SHA256SUMS`：安装包 SHA256 校验值。
 
 启动器独立版本仍为 **0.1.4**，窗口同时标明兼容 **v02.06.4beta**。本次为同版本覆盖更新，完整分卷包替代旧的仅启动器 ZIP；请重新下载，不要混用旧附件。
