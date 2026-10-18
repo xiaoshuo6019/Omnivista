@@ -1,10 +1,10 @@
-name: Stage verified replacement NAS download
+name: Stage verified 5beta NAS download
 
 on:
   workflow_dispatch:
     inputs:
       artifact_url:
-        description: Short-lived URL containing only the installable Docker artifact
+        description: Short-lived URL of the verified Docker artifact
         required: true
         type: string
       artifact_digest:
@@ -16,7 +16,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: publish-v02.06.4beta-downloads
+  group: publish-v02.06.5beta-downloads
   cancel-in-progress: false
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ github.token }}
-      IMAGE_FILE: omnivista-v02.06.4beta-linux-amd64.tar
+      IMAGE_FILE: omnivista-v02.06.5beta-linux-amd64.tar
     steps:
       - name: Download and verify installation archive
         env:
@@ -35,10 +35,11 @@ jobs:
           printf '::add-mask::%s\n' "$ARTIFACT_URL"
           python - <<'PY'
           import hashlib, json, os, pathlib, shutil, tarfile, urllib.parse, urllib.request, zipfile
-          parsed = urllib.parse.urlsplit(os.environ['ARTIFACT_URL'])
+          url = os.environ['ARTIFACT_URL']
+          parsed = urllib.parse.urlsplit(url)
           assert parsed.scheme == 'https' and parsed.hostname.endswith('.blob.core.windows.net')
           archive = pathlib.Path('verified-installation.zip')
-          with urllib.request.urlopen(os.environ['ARTIFACT_URL'], timeout=90) as source, archive.open('wb') as target:
+          with urllib.request.urlopen(url, timeout=90) as source, archive.open('wb') as target:
               shutil.copyfileobj(source, target)
           with archive.open('rb') as stream:
               assert 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest() == os.environ['ARTIFACT_DIGEST']
@@ -55,12 +56,13 @@ jobs:
           with tarfile.open(image_path) as image:
               manifest = json.load(image.extractfile('manifest.json'))
               assert len(manifest) == 1
-              assert 'ghcr.io/xiaoshuo6019/omnivista:v02.06.4beta' in manifest[0]['RepoTags']
+              assert 'ghcr.io/xiaoshuo6019/omnivista:v02.06.5beta' in manifest[0]['RepoTags']
               config = json.load(image.extractfile(manifest[0]['Config']))
               assert config['os'] == 'linux' and config['architecture'] == 'amd64'
-          print('VERIFIED_TAR_SHA256=' + expected)
-          image_path.rename(str(image_path) + '.incoming-2661656')
+          pathlib.Path('downloads/SHA256SUMS').write_text(expected + '  ' + image_name + '\n', encoding='ascii')
+          print('Verified linux/amd64 Docker archive, SHA256=' + expected)
           PY
-      - name: Stage replacement without removing existing downloads
+      - name: Upload to draft without altering older releases
         run: |
-          gh release upload v02.06.4beta "downloads/${IMAGE_FILE}.incoming-2661656" --repo "$GITHUB_REPOSITORY"
+          gh release view v02.06.5beta --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' | grep -qx true
+          gh release upload v02.06.5beta "downloads/$IMAGE_FILE" downloads/SHA256SUMS --repo "$GITHUB_REPOSITORY"
