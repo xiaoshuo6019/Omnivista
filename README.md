@@ -42,6 +42,16 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 欢迎交流安装使用、反馈问题和提出建议。反馈时请附上版本号、问题描述及相关截图，注意遮挡个人信息。
 
+## 使用与模型许可说明
+
+本项目目前免费提供，用于本地 AI 技术研究与评估，发行包不包含模型权重。
+
+第三方模型、插件及运行组件分别遵循各自许可证，本项目不授予其额外使用权。
+
+当前推荐的 Qwen-Image 2.1 受 Qwen Research License 约束，仅限研究或评估用途；商业用途须另行取得模型权利人的许可。请在下载及使用前阅读对应许可证。
+
+- [Qwen-Image 2.1 官方许可证（Qwen Research License）](https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE)
+
 ## 下载
 
 进入右侧 **Releases**，选择 **v02.06.4beta**，展开 **Assets**：
