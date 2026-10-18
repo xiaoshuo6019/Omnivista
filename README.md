@@ -36,6 +36,12 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ![深色主题创作界面](docs/screenshots/4beta-studio-dark.png)
 
+## 交流与反馈
+
+**QQ 交流群：934220040**
+
+欢迎交流安装使用、反馈问题和提出建议。反馈时请附上版本号、问题描述及相关截图，注意遮挡个人信息。
+
 ## 下载
 
 进入右侧 **Releases**，选择 **v02.06.4beta**，展开 **Assets**：
