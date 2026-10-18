@@ -18,7 +18,7 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ## 界面展示
 
-以下使用当前 v02.06.5beta Web 界面截取，电脑、账号、地址与硬件均为演示数据；不是实际设备运行记录、性能测试或生图验收结果。模型名称仅作界面示例，安装包不附带模型。
+以下为历史 v02.06.5beta Web 界面展示（6beta 沿用整体风格），电脑、账号、地址与硬件均为演示数据；不是实际设备运行记录、性能测试或生图验收结果。模型名称仅作界面示例，安装包不附带模型。
 
 ### 创作首页 · 多电脑快捷状态
 
@@ -58,19 +58,19 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ## 下载
 
-进入右侧 **Releases**，选择 **v02.06.5beta**，展开 **Assets**：
+进入右侧 **Releases**，选择 **v02.06.6beta**，展开 **Assets**：
 
-- `omnivista-v02.06.5beta-linux-amd64.tar`：NAS Docker 镜像，适用于 x86-64 NAS。
-- `Omnivista-path-0.1.5.zip`：启动器更新补丁，适合已经安装完整环境的电脑，不包含 Python、ComfyUI、CUDA 或模型。
-- Windows 完整基础环境（base）放在 [v02.06.4beta 下载页](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.4beta)，文件为 `Omnivista-base-0.1.4.7z.001`～`.004`：共 4 卷、约 6.34 GiB，首次安装须全部下载。解压后运行环境约 15.6 GiB，另备模型空间；此基础环境可配合 5beta 使用。
+- `omnivista-v02.06.6beta-linux-amd64.tar`：NAS Docker 镜像，适用于 x86-64 NAS。
+- `Omnivista-path-0.1.6.zip`：启动器更新补丁，适合已经安装完整环境的电脑，不包含 Python、ComfyUI、CUDA 或模型。
+- Windows 完整基础环境（base）放在 [v02.06.4beta 下载页](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.4beta)，文件为 `Omnivista-base-0.1.4.7z.001`～`.004`：共 4 卷、约 6.34 GiB，首次安装须全部下载。解压后运行环境约 15.6 GiB，另备模型空间；此基础环境可配合 6beta 使用。
 - `SHA256SUMS`：NAS 安装包 SHA256 校验值；`SHA256SUMS-launcher`：启动器补丁校验值。
 
-**首次安装：base 完整四卷 → 解压 → 安装最新 path 补丁；已有完整环境：只下载最新 path 补丁。** `base` 是完整基础环境，`path` 是后续更新包（按项目命名）。补丁文件名只带启动器独立版本号；0.1.5 兼容 NAS v02.06.5beta。不要把小补丁当成完整运行环境。
+**首次安装：base 完整四卷 → 解压 → 安装最新 path 补丁；已有完整环境：只下载最新 path 补丁。** `base` 是完整基础环境，`path` 是后续更新包（按项目命名）。补丁文件名只带启动器独立版本号；0.1.6 兼容 NAS v02.06.6beta。不要把小补丁当成完整运行环境。
 
 ## NAS 安装与升级
 
-1. 下载 TAR，在 NAS 容器管理器中导入，也可使用 `docker load --input omnivista-v02.06.5beta-linux-amd64.tar`。
-2. 镜像标签为 `ghcr.io/xiaoshuo6019/omnivista:v02.06.5beta`，服务端口为 `7870`。
+1. 下载 TAR，在 NAS 容器管理器中导入，也可使用 `docker load --input omnivista-v02.06.6beta-linux-amd64.tar`。
+2. 镜像标签为 `ghcr.io/xiaoshuo6019/omnivista:v02.06.6beta`，服务端口为 `7870`。
 3. 已安装用户先备份数据，沿用原有数据目录、图片目录及端口配置，再用新镜像重新创建容器；不要删除原数据卷。
 4. 首次安装用户需给容器配置可写的 `/data` 持久化挂载，再访问 `http://NAS地址:7870/` 完成页面上的初始化。
 
@@ -80,11 +80,11 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ![Windows 启动器布局参考：历史 0.1.4 截图](docs/screenshots/4beta-windows-launcher.png)
 
-上图为用户提供的历史布局参考；当前 0.1.5 已在 NAS 地址旁增加连接状态，窗口和 Windows 文件属性均显示独立版本 0.1.5。NAS 地址、运行环境与模型目录请按自己的设备填写；首次连接由 NAS Web 确认接入。
+上图为用户提供的历史布局参考；当前 0.1.6 保留 NAS 连接状态，新增真实采样进度上报，EXE 文件名、窗口和 Windows 文件属性均显示独立版本 0.1.6。NAS 地址、运行环境与模型目录请按自己的设备填写；首次连接由 NAS Web 确认接入。
 
 1. 下载全部同名 `.7z.001`、`.7z.002` 等分卷到同一目录，用 7-Zip 打开 `.001` 完整解压到可写目录。不要逐卷解压，也不要只取出 EXE。尽量使用较短路径，如 `D:\OmnivistaCompute`；运行库包含长路径文件。
-2. 保持 `Omnivista` 与 `Omnivista_models` 两个文件夹同级。双击 `Omnivista/Omnivista Compute Launcher.exe`；运行环境选 `Omnivista`，模型选同级 `Omnivista_models` 或自己的已有模型目录。模型按启动器“模型存放说明”放入 `unet`、`text_encoders`、`vae`、`loras`。
-3. 首次安装解压 base 后，或已有完整环境升级时，先完全退出旧启动器（含托盘）并备份配置；从最新 `Omnivista-path-0.1.5.zip` 解压出 EXE，替换原 `Omnivista/Omnivista Compute Launcher.exe`。只替换启动器，保留 `app`、`runtime`、`workflows`、模型与 `private`；新电脑不要复制别人的 NAS 连接身份。Windows GPU 驱动仍需自行安装。
+2. 保持 `Omnivista` 与 `Omnivista_models` 两个文件夹同级。安装最新 path 后双击 `Omnivista/Omnivista Compute Launcher 0.1.6.exe`；运行环境选 `Omnivista`，模型选同级 `Omnivista_models` 或自己的已有模型目录。模型按启动器“模型存放说明”放入 `unet`、`text_encoders`、`vae`、`loras`。
+3. 首次安装解压 base 后，或已有完整环境升级时，先完全退出旧启动器（含托盘）并备份配置；从最新 `Omnivista-path-0.1.6.zip` 解压出 `Omnivista Compute Launcher 0.1.6.exe` 放入原 `Omnivista` 目录，将旧 EXE 移到备份目录，避免误开旧版；桌面快捷方式改为新文件。首次手动打开后点击“连接 NAS”保存原配置，以登记当前文件名的登录自启动。只替换启动器，保留 `app`、`runtime`、`workflows`、模型与 `private`；新电脑不要复制别人的 NAS 连接身份。Windows GPU 驱动仍需自行安装。
 4. 首次填写 NAS 地址，点击“连接 NAS”，由 NAS Web 管理员确认接入；以后自动读取配置并重连。
 5. Windows 登录后自动运行的是启动器，不会自动启动算力。算力由 NAS Web 控制，本机保留待机和关机。
 6. 右侧白底正方形按钮上方为图标、下方为“登录”，用于打开 NAS 网页。
@@ -111,7 +111,13 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ## 版本范围
 
-本版优化紧凑多算力卡片、请求式接入确认、任务状态、主题色点、标题折叠、账号卡片和共享导航；齿轮切换创作/管理，退出登录增加确认，登录页使用粉紫渐变大 Logo 与半透明卡片。启动器 0.1.5 增加连接状态显示。沿用已有远程控制、硬件上报和逐台模型配置，不新增生成功能。网络唤醒依赖 NAS 网络、BIOS 与网卡，Docker bridge 下的广播是否可达需要实际确认。
+6beta 新增创作画布居中的纵向任务详情，显示排队、准备、真实采样步数、解码和 NAS 保存；收起不取消任务，日志独立折叠，不改变网页外层布局。旧电脑未上报步骤时明确提示，不用耗时伪造进度。
+
+账号创建置顶默认收起，编辑直接在原卡片展开；标准、专业、自定义权限方案可保存，偏离模板自动标记自定义；模板调整不覆盖已有账号。新建/改密至少6位且含英文字母和数字，错误就在密码框上方。管理中心记住上次栏目，首次默认算力中心。
+
+先更新 NAS 再安装启动器 0.1.6；原 base 四卷无需重下。本轮仅隔离功能、浏览器、冻结 EXE 和 CI 验证，未做真实 GPU 验收。
+
+以下为既有能力：本版优化紧凑多算力卡片、请求式接入确认、任务状态、主题色点、标题折叠、账号卡片和共享导航；齿轮切换创作/管理，退出登录增加确认，登录页使用粉紫渐变大 Logo 与半透明卡片。启动器 0.1.6 增加连接状态显示。沿用已有远程控制、硬件上报和逐台模型配置，不新增生成功能。网络唤醒依赖 NAS 网络、BIOS 与网卡，Docker bridge 下的广播是否可达需要实际确认。
 
 账号、存储和真实生成日志统一在管理中心操作。旧管理页面已移除，教程也已更新为当前操作路径，不再跳转旧界面或要求运行旧 BAT。
 
