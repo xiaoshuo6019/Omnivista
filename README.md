@@ -57,6 +57,10 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ## Windows 启动器
 
+![Omnivista Windows 算力启动器 0.1.4，兼容 v02.06.4beta](docs/screenshots/4beta-windows-launcher.png)
+
+启动器界面由用户提供。NAS 地址、运行环境与模型目录请按自己的设备填写；首次连接由 NAS Web 确认接入。
+
 1. 下载全部同名 `.7z.001`、`.7z.002` 等分卷到同一目录，用 7-Zip 打开 `.001` 完整解压到可写目录。不要逐卷解压，也不要只取出 EXE。尽量使用较短路径，如 `D:\OmnivistaCompute`；运行库包含长路径文件。
 2. 保持 `Omnivista` 与 `Omnivista_models` 两个文件夹同级。双击 `Omnivista/Omnivista Compute Launcher.exe`；运行环境选 `Omnivista`，模型选同级 `Omnivista_models` 或自己的已有模型目录。模型按启动器“模型存放说明”放入 `unet`、`text_encoders`、`vae`、`loras`。
 3. 升级前先完全退出旧启动器并备份配置。保留自己的模型与 `private`，不要用新包的空目录覆盖；新电脑不要复制别人的 NAS 连接身份。Windows GPU 驱动仍需自行安装。
