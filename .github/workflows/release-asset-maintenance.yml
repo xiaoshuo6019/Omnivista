@@ -43,9 +43,10 @@ jobs:
              size+=len(chunk);h.update(chunk);local.write(chunk)
            assert size==source['size'] and 'sha256:'+h.hexdigest()==source['digest']
            upload_url='https://uploads.github.com/repos/'+repo+'/releases/'+str(rid)+'/assets?name='+urllib.parse.quote(name)
-           command=['curl','--silent','--show-error','--fail','--connect-timeout','30','--max-time','900','-X','POST','-H','Authorization: Bearer '+os.environ['GH_TOKEN'],'-H','Content-Type: application/octet-stream','--data-binary','@'+str(target),upload_url]
+           command=['curl','--silent','--show-error','--fail','--connect-timeout','30','--max-time','900','-X','POST','-H','Authorization: Bearer '+os.environ['GH_TOKEN'],'-H','Content-Type: application/octet-stream','--upload-file',str(target),upload_url]
            sent=subprocess.run(command,capture_output=True,text=True)
            if sent.returncode:
+            print('Upload client result '+str(sent.returncode)+': '+sent.stderr[-400:],flush=True)
             check=next((a for a in api()['assets'] if a['name']==name),None)
             if not check or check.get('digest')!=source['digest']:raise RuntimeError('Binary upload failed; retry remaining files by release ID')
            uploaded=next(a for a in api()['assets'] if a['name']==name)
