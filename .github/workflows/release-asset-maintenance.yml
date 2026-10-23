@@ -1,0 +1,50 @@
+name: Maintain release download assets
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: release-asset-maintenance
+  cancel-in-progress: false
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Copy and verify selected binaries
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,urllib.request
+          sources=json.loads('[{"name":"Omnivista-base-0.1.4.7z.001","size":1992294400,"digest":"sha256:16313b4a2111f3cb6d5ddf3cf21955040a5b2d9b77ce9d92febdc073896c42e2","browser_download_url":"https://github.com/xiaoshuo6019/Omnivista/releases/download/v02.06.4beta/Omnivista-base-0.1.4.7z.001"},{"name":"Omnivista-base-0.1.4.7z.002","size":1992294400,"digest":"sha256:a9c67b5fa91d62ae11c2a63c3169e1cca8f76e0d2096166fdcb20b9aa1e42491","browser_download_url":"https://github.com/xiaoshuo6019/Omnivista/releases/download/v02.06.4beta/Omnivista-base-0.1.4.7z.002"},{"name":"Omnivista-base-0.1.4.7z.003","size":1992294400,"digest":"sha256:9cf001486e78045ffc394952b50bf8b0cac119184f85a8d3597a2b93a6cefff9","browser_download_url":"https://github.com/xiaoshuo6019/Omnivista/releases/download/v02.06.4beta/Omnivista-base-0.1.4.7z.003"},{"name":"Omnivista-base-0.1.4.7z.004","size":833826346,"digest":"sha256:b884f9f30035becd63da4cc3fa91b490ba732cf4ac319f742744f2549dd1b522","browser_download_url":"https://github.com/xiaoshuo6019/Omnivista/releases/download/v02.06.4beta/Omnivista-base-0.1.4.7z.004"}]')
+          repo='xiaoshuo6019/Omnivista'
+          tag='v02.06.8beta-plus'
+          rid=421827945
+          def api():
+           return json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases/{rid}']))
+          r=api()
+          assert r['draft'] and r['tag_name']==tag
+          for source in sources:
+           existing=next((a for a in api()['assets'] if a['name']==source['name']),None)
+           if existing:
+            assert existing['digest']==source['digest'] and existing['size']==source['size']
+            print('Already verified: '+source['name'],flush=True)
+            continue
+           name=source['name']
+           assert pathlib.Path(name).name==name
+           assert source['browser_download_url'].startswith('https://github.com/xiaoshuo6019/Omnivista/releases/download/')
+           target=pathlib.Path(name)
+           h=hashlib.sha256();size=0
+           with urllib.request.urlopen(source['browser_download_url'],timeout=120) as remote,target.open('wb') as local:
+            while True:
+             chunk=remote.read(8*1024*1024)
+             if not chunk:break
+             size+=len(chunk);h.update(chunk);local.write(chunk)
+           assert size==source['size'] and 'sha256:'+h.hexdigest()==source['digest']
+           subprocess.run(['gh','release','upload',tag,str(target),'--repo',repo],check=True)
+           uploaded=next(a for a in api()['assets'] if a['name']==name)
+           assert uploaded['digest']==source['digest'] and uploaded['size']==size
+           target.unlink()
+           print('Copied and verified: '+name,flush=True)
+          PY
