@@ -126,13 +126,3 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 [下载 NAS 8beta+ 与启动器 0.1.9](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.8beta-plus)。新版使用 Docker TAR 导入，不需要重新下载 Windows base。
 
 NAS 8beta+ 需要发行方已开通新版运行许可；未开通时请保留原 NAS 版本。启动器 0.1.9 可继续配套 8beta+ NAS，启动器需要 CPython 3.12 x64。详见[本版说明](docs/releases/v02.06.8beta-plus.md)。
-
-
-## 历史版本说明
-
-旧版附件与标签已清理，完整更新说明保留如下：
-
-- [v02.06.4beta](docs/releases/v02.06.4beta.md)
-- [v02.06.5beta](docs/releases/v02.06.5beta.md)
-- [v02.06.6beta](docs/releases/v02.06.6beta.md)
-- [v02.06.7beta](docs/releases/v02.06.7beta.md)
