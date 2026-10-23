@@ -1,0 +1,71 @@
+name: Transfer verified 8beta+ downloads
+run-name: Transfer 8beta+ verified c11e5ad68d5e
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_url:
+        description: Temporary URL for the authorized binary artifact
+        required: true
+        type: string
+      release_id:
+        description: Public draft release ID
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: transfer-8beta-plus
+  cancel-in-progress: false
+jobs:
+  transfer:
+    if: github.repository == 'xiaoshuo6019/Omnivista'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_ID: ${{ inputs.release_id }}
+    steps:
+      - name: Verify exact archive on the server
+        env:
+          ARTIFACT_URL: ${{ inputs.artifact_url }}
+        run: |
+          printf '::add-mask::%s\n' "$ARTIFACT_URL"
+          python - <<'PY'
+          import hashlib,json,os,pathlib,shutil,tarfile,urllib.parse,urllib.request,zipfile
+          url=os.environ['ARTIFACT_URL']
+          parsed=urllib.parse.urlsplit(url)
+          assert parsed.scheme=='https' and parsed.hostname.endswith('.blob.core.windows.net')
+          archive=pathlib.Path('verified.zip')
+          with urllib.request.urlopen(url,timeout=90) as source,archive.open('wb') as target:
+              shutil.copyfileobj(source,target)
+          with archive.open('rb') as stream:
+              assert hashlib.file_digest(stream,'sha256').hexdigest()=='fe1f9c4485c7545f1a24a62eea992aad7dae18ed2b999b9629c874df11607dc4'
+          name='omnivista-v02.06.8beta-plus-linux-amd64.tar'
+          expected='b8835f0eff7686f0bb24b5496979b9f4ed60c45dd2c7e1c3ebd061ab8de6b86a'
+          with zipfile.ZipFile(archive) as bundle:
+              assert set(bundle.namelist())=={name,'SHA256SUMS-native'}
+              assert bundle.testzip() is None
+              assert bundle.read('SHA256SUMS-native').decode().strip()==expected+'  '+name
+              bundle.extractall('downloads')
+          with pathlib.Path('downloads',name).open('rb') as stream:
+              assert hashlib.file_digest(stream,'sha256').hexdigest()==expected
+          with tarfile.open(pathlib.Path('downloads',name)) as image:
+              manifest=json.load(image.extractfile('manifest.json'))
+              assert len(manifest)==1 and manifest[0]['RepoTags']==['omnivista-native:v02.06.8beta-plus']
+              config=json.load(image.extractfile(manifest[0]['Config']))
+              assert config['os']=='linux' and config['architecture']=='amd64'
+              labels=config['config']['Labels']
+              assert labels['org.opencontainers.image.revision']=='c11e5ad68d5e91df093019ce345201438bd78896'
+              assert labels['io.omnivista.constant-encryption']=='false'
+          print('Verified exact 8beta+ Docker archive and checksum.')
+          PY
+      - name: Upload only to the selected draft
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release.json
+          python - <<'PY'
+          import json,os
+          r=json.load(open('release.json'))
+          assert str(r['id'])==os.environ['RELEASE_ID'] and r['draft']
+          assert r['tag_name']=='v02.06.8beta-plus'
+          PY
+          gh release upload v02.06.8beta-plus downloads/omnivista-v02.06.8beta-plus-linux-amd64.tar downloads/SHA256SUMS-native --repo "$GITHUB_REPOSITORY"
