@@ -60,6 +60,8 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 当前为 **v02.06.8beta+ 测试版**，NAS、base 和启动器升级包都在[同一发布页](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.8beta-plus)。
 
+NAS、基础环境与启动器均非正式版，功能与界面后续仍会调整。
+
 - NAS：`omnivista-v02.06.8beta-plus-linux-amd64.tar`，也可在线拉取 `ghcr.io/xiaoshuo6019/omnivista:v02.06.8beta-plus`。
 - Windows 首次安装：下载 `Omnivista-base-0.1.4.7z.001`～`.004` 全部四卷，放在同一目录，用 7-Zip 从 `.001` 解压，再应用 `Omnivista-path-0.1.9-native.zip`。
 - 已有完整 Windows 环境：只下载 `Omnivista-path-0.1.9-native.zip`，累计包含启动器 0.1.9 和七份工作流，无须逐版安装旧补丁。
@@ -70,7 +72,7 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ## NAS 安装与升级
 
-已有用户先备份并沿用原数据目录、图片目录、端口和部署配置。发行方须先升级配套授权服务至 0.1.11，再使用 NAS 8beta+。
+已有用户先备份并沿用原数据目录、图片目录、端口和部署配置。
 
 在线拉取：
 
@@ -88,9 +90,7 @@ docker load -i omnivista-v02.06.8beta-plus-linux-amd64.tar
 
 TAR 导入后的本地标签为 `omnivista-native:v02.06.8beta-plus`，参考 [compose.native.yaml](compose.native.yaml) 使用本地镜像。在线拉取和 TAR 导入任选其一，不混用镜像名称。
 
-首次安装需配置可写的 `/data` 持久化挂载，服务端口为 `7870`。已有安装保留原 `/data` 挂载和安装身份；下载或导入不会自动替换正在运行的容器。
-
-容器重建后若提示运行实例冲突，先停止旧实例，再由发行方在授权后台释放旧运行名额。详见 [NAS 运行许可要求](RUNTIME_LICENSE.md)。
+首次安装需配置可写的 `/data` 持久化挂载，服务端口为 `7870`。已有安装保留原 `/data` 挂载；下载或导入不会自动替换正在运行的容器。
 
 ## Windows 启动器
 
@@ -137,6 +137,6 @@ TAR 导入后的本地标签为 `omnivista-native:v02.06.8beta-plus`，参考 [c
 
 ## 8beta+ 下载与升级
 
-[下载 NAS 8beta+ 与启动器 0.1.9](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.8beta-plus)。新版使用 Docker TAR 导入，不需要重新下载 Windows base。
+[下载 NAS 8beta+ 与启动器 0.1.9](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.8beta-plus)。NAS 可在线拉取镜像或导入 Docker TAR；已有完整 Windows 环境无需重下 base。
 
-NAS 8beta+ 需要发行方已开通新版运行许可；未开通时请保留原 NAS 版本。启动器 0.1.9 可继续配套 8beta+ NAS，启动器需要 CPython 3.12 x64。详见[本版说明](docs/releases/v02.06.8beta-plus.md)。
+启动器 0.1.9 可继续配套 8beta+ NAS，启动器需要 CPython 3.12 x64。详见[本版说明](docs/releases/v02.06.8beta-plus.md)。
