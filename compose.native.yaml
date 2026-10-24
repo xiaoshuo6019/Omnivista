@@ -1,0 +1,22 @@
+# First docker load -i omnivista-v02.06.8beta-plus-linux-amd64.tar.
+# Prepare a data directory owned by UID/GID 10001, then compose up -d.
+services:
+  wanxiang:
+    image: omnivista-native:v02.06.8beta-plus
+    pull_policy: never
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "${WANXIANG_BIND_IP:-127.0.0.1}:${WANXIANG_PORT:-7870}:7870"
+    environment:
+      WANXIANG_DATA: /data
+      FORWARDED_ALLOW_IPS: "${WANXIANG_PROXY_IP:-127.0.0.1}"
+      TZ: Asia/Shanghai
+    user: "${WANXIANG_UID:-10001}:${WANXIANG_GID:-10001}"
+    volumes:
+      - "${WANXIANG_DATA_DIR:-./nas_data}:/data"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
