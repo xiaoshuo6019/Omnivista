@@ -58,25 +58,39 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ## 下载
 
-进入右侧 **Releases**，选择 **v02.06.8beta-plus**，展开 **Assets**：
+当前为 **v02.06.8beta+ 测试版**，NAS、base 和启动器升级包都在[同一发布页](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.8beta-plus)。
 
-- `omnivista-v02.06.8beta-plus-linux-amd64.tar`：NAS Docker 镜像，适用于 x86-64 NAS。
-- `Omnivista-path-0.1.9-native.zip`：启动器更新补丁，适合已经安装完整环境的电脑，不包含 Python、ComfyUI、CUDA 或模型。
-- Windows 完整基础环境（base）放在 [8beta+ 下载页](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.8beta-plus)，文件为 `Omnivista-base-0.1.4.7z.001`～`.004`：共 4 卷、约 6.34 GiB，首次安装须全部下载。解压后运行环境约 15.6 GiB，另备模型空间；此基础环境可配合 8beta+ 使用。
-- `SHA256SUMS`：NAS 安装包 SHA256 校验值；`SHA256SUMS-launcher`：启动器补丁校验值。
+- NAS：`omnivista-v02.06.8beta-plus-linux-amd64.tar`，也可在线拉取 `ghcr.io/xiaoshuo6019/omnivista:v02.06.8beta-plus`。
+- Windows 首次安装：下载 `Omnivista-base-0.1.4.7z.001`～`.004` 全部四卷，放在同一目录，用 7-Zip 从 `.001` 解压，再应用 `Omnivista-path-0.1.9-native.zip`。
+- 已有完整 Windows 环境：只下载 `Omnivista-path-0.1.9-native.zip`，累计包含启动器 0.1.9 和七份工作流，无须逐版安装旧补丁。
+- base 四卷合计约 6.34 GiB，提供 Python、ComfyUI 等完整基础环境；升级包约 22 MB，需要已有完整环境。两者都不包含模型和显卡驱动。
+- `SHA256SUMS-native`、`SHA256SUMS-base`、`SHA256SUMS-launcher` 分别用于校验 NAS TAR、base 四卷、启动器升级包。
 
-8beta+ 更新补丁除 EXE 外包含七个工作流；升级时先备份同名文件，再复制到原 workflows 目录，保留其他文件。NAS 与启动器须配套更新，建议先更新 NAS。
-
-**首次安装：base 完整四卷 → 解压 → 安装最新 path 补丁；已有完整环境：只下载最新 path 补丁。** `base` 是完整基础环境，`path` 是后续更新包（按项目命名）。补丁文件名只带启动器独立版本号；0.1.9 兼容 NAS v02.06.8beta-plus。不要把小补丁当成完整运行环境。
+详细更新内容与升级步骤见[8beta+ 版本说明](docs/releases/v02.06.8beta-plus.md)。
 
 ## NAS 安装与升级
 
-1. 下载 TAR，在 NAS 容器管理器中导入，也可使用 `docker load --input omnivista-v02.06.8beta-plus-linux-amd64.tar`。
-2. 镜像标签为 `omnivista-native:v02.06.8beta-plus`，服务端口为 `7870`。
-3. 已安装用户先备份数据，沿用原有数据目录、图片目录及端口配置，再用新镜像重新创建容器；不要删除原数据卷。
-4. 首次安装用户需给容器配置可写的 `/data` 持久化挂载，再访问 `http://NAS地址:7870/` 完成页面上的初始化。
+已有用户先备份并沿用原数据目录、图片目录、端口和部署配置。发行方须先升级配套授权服务至 0.1.11，再使用 NAS 8beta+。
 
-下载或导入镜像不会自动替换已有运行容器。仅调整镜像版本，不把容器临时文件系统当作持久化存储。
+在线拉取：
+
+```sh
+docker pull ghcr.io/xiaoshuo6019/omnivista:v02.06.8beta-plus
+```
+
+已有 Compose 项目仅将 `image` 改为上面的固定标签，保留原数据卷、端口和环境变量，再重新创建容器；新建项目可参考 [compose.image.yaml](compose.image.yaml)。
+
+离线导入：
+
+```sh
+docker load -i omnivista-v02.06.8beta-plus-linux-amd64.tar
+```
+
+TAR 导入后的本地标签为 `omnivista-native:v02.06.8beta-plus`，参考 [compose.native.yaml](compose.native.yaml) 使用本地镜像。在线拉取和 TAR 导入任选其一，不混用镜像名称。
+
+首次安装需配置可写的 `/data` 持久化挂载，服务端口为 `7870`。已有安装保留原 `/data` 挂载和安装身份；下载或导入不会自动替换正在运行的容器。
+
+容器重建后若提示运行实例冲突，先停止旧实例，再由发行方在授权后台释放旧运行名额。详见 [NAS 运行许可要求](RUNTIME_LICENSE.md)。
 
 ## Windows 启动器
 
