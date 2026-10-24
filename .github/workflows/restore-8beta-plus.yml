@@ -1,4 +1,4 @@
-name: Restore verified 8beta+ downloads and image
+name: Restore verified 8beta+ downloads
 run-name: Restore NAS 8beta+ c11e5ad68d5e
 on:
   workflow_dispatch:
@@ -13,7 +13,6 @@ on:
         type: string
 permissions:
   contents: write
-  packages: write
 concurrency:
   group: restore-8beta-plus
   cancel-in-progress: false
@@ -72,28 +71,4 @@ jobs:
                   assert present[name]['digest']==digest
               else:
                   subprocess.run(['gh','release','upload',r['tag_name'],str(pathlib.Path('downloads',name)),'--repo',repo],check=True)
-          PY
-      - name: Publish the verified image to GHCR
-        env:
-          REGISTRY_TOKEN: ${{ github.token }}
-        run: |
-          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          docker load --input downloads/omnivista-v02.06.8beta-plus-linux-amd64.tar
-          docker tag omnivista-native:v02.06.8beta-plus ghcr.io/xiaoshuo6019/omnivista:v02.06.8beta-plus
-          docker push ghcr.io/xiaoshuo6019/omnivista:v02.06.8beta-plus
-          docker image inspect omnivista-native:v02.06.8beta-plus --format '{{.Id}}'
-      - name: Verify anonymous image access
-        run: |
-          python - <<'PY'
-          import json,pathlib,subprocess,urllib.parse,urllib.request
-          query=urllib.parse.urlencode({'service':'ghcr.io','scope':'repository:xiaoshuo6019/omnivista:pull'})
-          with urllib.request.urlopen('https://ghcr.io/token?'+query,timeout=30) as response:
-              token=json.load(response)['token']
-          url='https://ghcr.io/v2/xiaoshuo6019/omnivista/manifests/v02.06.8beta-plus'
-          request=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json'})
-          with urllib.request.urlopen(request,timeout=30) as response:
-              manifest=json.load(response);digest=response.headers['Docker-Content-Digest']
-          expected=subprocess.check_output(['docker','image','inspect','omnivista-native:v02.06.8beta-plus','--format','{{.Id}}'],text=True).strip()
-          assert manifest['config']['digest']==expected
-          print('Anonymous GHCR access verified: '+digest)
           PY
