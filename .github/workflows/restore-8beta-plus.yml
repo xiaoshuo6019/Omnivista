@@ -1,0 +1,99 @@
+name: Restore verified 8beta+ downloads and image
+run-name: Restore NAS 8beta+ c11e5ad68d5e
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_url:
+        description: Temporary URL for the approved NAS binary artifact
+        required: true
+        type: string
+      release_id:
+        description: Destination draft release ID
+        required: true
+        type: string
+permissions:
+  contents: write
+  packages: write
+concurrency:
+  group: restore-8beta-plus
+  cancel-in-progress: false
+jobs:
+  restore:
+    if: github.repository == 'xiaoshuo6019/Omnivista'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_ID: ${{ inputs.release_id }}
+    steps:
+      - name: Verify the original NAS binary artifact
+        env:
+          ARTIFACT_URL: ${{ inputs.artifact_url }}
+        run: |
+          printf '::add-mask::%s\n' "$ARTIFACT_URL"
+          python - <<'PY'
+          import hashlib,json,os,pathlib,shutil,tarfile,urllib.parse,urllib.request,zipfile
+          url=os.environ['ARTIFACT_URL']
+          parsed=urllib.parse.urlsplit(url)
+          assert parsed.scheme=='https' and parsed.hostname.endswith('.blob.core.windows.net')
+          archive=pathlib.Path('verified.zip')
+          with urllib.request.urlopen(url,timeout=90) as source,archive.open('wb') as target:
+              shutil.copyfileobj(source,target)
+          with archive.open('rb') as stream:
+              assert hashlib.file_digest(stream,'sha256').hexdigest()=='fe1f9c4485c7545f1a24a62eea992aad7dae18ed2b999b9629c874df11607dc4'
+          name='omnivista-v02.06.8beta-plus-linux-amd64.tar'
+          expected='b8835f0eff7686f0bb24b5496979b9f4ed60c45dd2c7e1c3ebd061ab8de6b86a'
+          with zipfile.ZipFile(archive) as bundle:
+              assert set(bundle.namelist())=={name,'SHA256SUMS-native'}
+              assert bundle.testzip() is None
+              assert bundle.read('SHA256SUMS-native').decode().strip()==expected+'  '+name
+              bundle.extractall('downloads')
+          with pathlib.Path('downloads',name).open('rb') as stream:
+              assert hashlib.file_digest(stream,'sha256').hexdigest()==expected
+          with tarfile.open(pathlib.Path('downloads',name)) as image:
+              manifest=json.load(image.extractfile('manifest.json'))
+              assert len(manifest)==1 and manifest[0]['RepoTags']==['omnivista-native:v02.06.8beta-plus']
+              config=json.load(image.extractfile(manifest[0]['Config']))
+              assert config['os']=='linux' and config['architecture']=='amd64'
+              assert config['config']['Labels']['org.opencontainers.image.revision']=='c11e5ad68d5e91df093019ce345201438bd78896'
+          print('Original NAS artifact, TAR checksum, architecture and revision verified.')
+          PY
+      - name: Restore TAR and checksum to the selected draft
+        run: |
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          repo=os.environ['GITHUB_REPOSITORY'];rid=os.environ['RELEASE_ID']
+          r=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases/{rid}']))
+          assert str(r['id'])==rid and r['draft'] and r['tag_name']=='v02.06.8beta-plus'
+          expected={'omnivista-v02.06.8beta-plus-linux-amd64.tar':'sha256:b8835f0eff7686f0bb24b5496979b9f4ed60c45dd2c7e1c3ebd061ab8de6b86a','SHA256SUMS-native':'sha256:4377a41632b6aa7b6a487c4d2a50baf2a974e154660c69b0d1359f311d02ba14'}
+          present={a['name']:a for a in r['assets']}
+          for name,digest in expected.items():
+              if name in present:
+                  assert present[name]['digest']==digest
+              else:
+                  subprocess.run(['gh','release','upload',r['tag_name'],str(pathlib.Path('downloads',name)),'--repo',repo],check=True)
+          PY
+      - name: Publish the verified image to GHCR
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker load --input downloads/omnivista-v02.06.8beta-plus-linux-amd64.tar
+          docker tag omnivista-native:v02.06.8beta-plus ghcr.io/xiaoshuo6019/omnivista:v02.06.8beta-plus
+          docker push ghcr.io/xiaoshuo6019/omnivista:v02.06.8beta-plus
+          docker image inspect omnivista-native:v02.06.8beta-plus --format '{{.Id}}'
+      - name: Verify anonymous image access
+        run: |
+          python - <<'PY'
+          import json,pathlib,subprocess,urllib.parse,urllib.request
+          query=urllib.parse.urlencode({'service':'ghcr.io','scope':'repository:xiaoshuo6019/omnivista:pull'})
+          with urllib.request.urlopen('https://ghcr.io/token?'+query,timeout=30) as response:
+              token=json.load(response)['token']
+          url='https://ghcr.io/v2/xiaoshuo6019/omnivista/manifests/v02.06.8beta-plus'
+          request=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json'})
+          with urllib.request.urlopen(request,timeout=30) as response:
+              manifest=json.load(response);digest=response.headers['Docker-Content-Digest']
+          expected=subprocess.check_output(['docker','image','inspect','omnivista-native:v02.06.8beta-plus','--format','{{.Id}}'],text=True).strip()
+          assert manifest['config']['digest']==expected
+          print('Anonymous GHCR access verified: '+digest)
+          PY
