@@ -133,8 +133,3 @@ TAR 导入后的本地标签为 `omnivista-native:v02.06.8beta-plus`，参考 [c
 
 本版通过隔离功能、浏览器、冻结 EXE 与 Linux 容器检查；未做真实 GPU 生图、关机或唤醒验收。网络唤醒依赖 NAS 网络、BIOS 与网卡设置。这是 beta 版本，升级前请备份数据与同名文件。
 
-## 8beta+ 下载与升级
-
-[下载 NAS 8beta+ 与启动器 0.1.9](https://github.com/xiaoshuo6019/Omnivista/releases/tag/v02.06.8beta-plus)。NAS 可在线拉取镜像或导入 Docker TAR；已有完整 Windows 环境无需重下 base。
-
-启动器 0.1.9 可继续配套 8beta+ NAS，启动器需要 CPython 3.12 x64。详见[本版说明](docs/releases/v02.06.8beta-plus.md)。
