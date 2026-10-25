@@ -32,13 +32,11 @@ Omnivista（万象绘镜）把 NAS 和多台 Windows 算力电脑连接起来，
 
 ![每台电脑独立启动、待机与暂停接任务](docs/screenshots/5beta-compute-cards.png)
 
-### 深色主题
+### 9beta 更新后的界面
 
-![深色主题创作界面](docs/screenshots/5beta-studio-dark.png)
+![9beta 创作首页](docs/screenshots/8beta-studio-home.png)
 
-### 登录页 · 粉紫渐变与半透明卡片
-
-![粉紫渐变大 Logo 与半透明登录卡片](docs/screenshots/5beta-login.png)
+![9beta 生成结果](docs/screenshots/8beta-generated-result.png)
 
 ## 交流与反馈
 
